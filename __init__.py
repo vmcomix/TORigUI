@@ -1,11 +1,13 @@
 import bpy
 import sys
 from importlib import reload
+from bpy.types import AddonPreferences
+from bpy.props import StringProperty
 
 bl_info = {
 	'name' : "TOAnimate Rig UI"
 	,'author' : "Vlad Mokhov"
-	,'version' : (0, 0, 1)
+	,'version' : (1, 0, 0)
 	,'blender' : (4, 0, 0)
 	,'description' : "Add on for displaying the UI panel on TOAnimate rigs."
 	,'location': "View 3D > Sidebar(N) > TORigUI"
@@ -14,6 +16,7 @@ bl_info = {
 
 reload_list = [
                 'ui_panel',
+                'update',
               ]
 
 # This makes sure to reload the modules when running "Reload Scripts"
@@ -22,7 +25,26 @@ for module in reload_list:
         reload(sys.modules[__name__ + '.' + module])
     else:
         from . import ui_panel
+        from . import update
 
+
+class TORigUIPreferences(AddonPreferences):
+
+    bl_idname = __name__
+
+    update: StringProperty(default="")
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        if self.update == "Update available":
+            row.operator("pose.rigui_update_addon", text="Update", icon="IMPORT").update = True
+        else:
+            row.operator("pose.rigui_update_addon", text="Check for Update", icon="QUESTION").check_update = True
+
+        row = layout.row()
+        if not self.update == "":
+            row.label(text=self.update)
 
 class_list = {
     ui_panel.VIEW3D_PT_TORigUI,
@@ -37,7 +59,9 @@ class_list = {
     ui_panel.POSE_OT_rigify_switch_parent,
     ui_panel.POSE_OT_rigify_switch_parent_bake,
     ui_panel.POSE_OT_rig_change_resolution,
-    ui_panel.POSE_OT_rig_set_mask
+    ui_panel.POSE_OT_rig_set_mask,
+    update.RigUIAddonUpdate,
+    TORigUIPreferences
 }
 
 from bpy.utils import register_class, unregister_class
