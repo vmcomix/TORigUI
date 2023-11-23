@@ -10,7 +10,7 @@ def download_file(url, destination):
         file.write(response.content)
 
 def download_repository_files():
-    files = ['__init__.py', 'ui_panel.py']
+    files = ['__init__.py', 'ui_panel.py', 'update.py']
     for file in files:
         file_url = f'https://raw.githubusercontent.com/vmcomix/TORigUI/master/{file}'  # Assuming the main branch, adjust as needed
         destination = Path(os.path.split(__file__)[0]) / file
@@ -48,7 +48,7 @@ class RigUIAddonUpdate(bpy.types.Operator):
                 context.preferences.addons["TORigUI"].preferences.update = "Update available"
             self.check_update = False
         elif self.update:
-            for file in current_directory.iterdir():
+            for file in Path(current_directory / "hash").iterdir():
                 if file.is_file() and len(file.stem) == 40:
                     hash = file.stem
 
