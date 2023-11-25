@@ -10,7 +10,13 @@ def download_file(url, destination):
         file.write(response.content)
 
 def download_repository_files():
-    files = ['__init__.py', 'ui_panel.py', 'update.py', 'extras_cartoony_max.py']
+    files = []
+
+    current_directory = Path(__file__).resolve().parent
+    for file in current_directory.iterdir():
+        if file.name.endswith(".py"):
+            files.append(file.name)
+
     for file in files:
         file_url = f'https://raw.githubusercontent.com/vmcomix/TORigUI/master/{file}'
         destination = Path(os.path.split(__file__)[0]) / file
@@ -42,6 +48,7 @@ class RigUIAddonUpdate(bpy.types.Operator):
         current_directory = Path(__file__).resolve().parent
 
         if self.check_update:
+            current_directory = Path(__file__).resolve().parent
             if Path(current_directory / "hash" / latest_commit_sha()).exists():
                 context.preferences.addons["TORigUI"].preferences.update = "Up to date"
             else:
