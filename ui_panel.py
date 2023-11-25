@@ -1400,6 +1400,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
     
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
+    bl_idname = "VIEW3D_PT_TORigUI"
     bl_category = 'TO Rig UI'
     bl_label = "TOAnimate Rig UI"
 
@@ -1446,7 +1447,9 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
 
         if context.active_pose_bone:
             bone = context.active_pose_bone
-            if "settings" in bone.name: # display specific layout and buttons for settings controls
+            if "settings" in bone.name and \
+                bone.get("fk_bones") and \
+                bone.get("ik_bones"): # display specific layout and buttons for settings controls
 
                 bone_name = None
                 if "arm" in bone.name:
@@ -1619,6 +1622,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                 col.label(text="Set Rig Resolution (Viewport)")
                 row = col.row(align=True)
                 row.scale_y = 2
+                row.enabled = not bone.get("no_res_switching")
                 row.operator('pose.rig_change_resolution', text="Low Res", icon="MESH_PLANE").resolution = "low"
                 row.operator('pose.rig_change_resolution', text="Medium Res", icon="MOD_REMESH").resolution = "medium"
                 row.operator('pose.rig_change_resolution', text="High Res", icon="MESH_UVSPHERE").resolution = "high"
@@ -1642,7 +1646,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                         op.mask = prop
                         op.objects = json.dumps(bone[prop])
 
-            elif "head" in bone.name: # add parent space switch for head
+            elif bone.name == "head" or bone.name == "Head": # add parent space switch for head
                 box = layout.box()
                 col = box.column()
                 col.label(text="Head Parent Space (Rotational)")

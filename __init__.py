@@ -1,22 +1,50 @@
 import bpy
 import sys
+import requests
+from pathlib import Path
 from importlib import reload
 from bpy.types import AddonPreferences
 from bpy.props import StringProperty
+from bpy.utils import register_class, unregister_class
 
 bl_info = {
 	'name' : "TOAnimate Rig UI"
 	,'author' : "Vlad Mokhov"
-	,'version' : (1, 0, 0)
+	,'version' : (1, 1, 0)
 	,'blender' : (4, 0, 0)
 	,'description' : "Add on for displaying the UI panel on TOAnimate rigs."
 	,'location': "View 3D > Sidebar(N) > TORigUI"
 	,'category': 'Rigging'
 }
 
+extra_modules = ['extras_cartoony_max.py']
+
+missing_modules = []
+for module in extra_modules:
+    current_directory = Path(__file__).resolve().parent
+    if not Path(current_directory / module).exists():
+        missing_modules.append(module)
+
+if missing_modules == []:
+    pass # all good in the hood
+else:
+    for module in missing_modules:
+        file_url = f'https://raw.githubusercontent.com/vmcomix/TORigUI/master/{module}'
+        destination = current_directory / module
+        response = requests.get(file_url)
+        if response.status_code == 200:
+            with open(destination, 'wb') as file:
+                file.write(response.content)
+        elif response.status_code == 404:
+            print("Trouble connecting to github to update TORigUI")
+            break
+    bpy.ops.script.reload()
+ 
+
 reload_list = [
                 'ui_panel',
                 'update',
+                'extras_cartoony_max'
               ]
 
 # This makes sure to reload the modules when running "Reload Scripts"
@@ -26,6 +54,7 @@ for module in reload_list:
     else:
         from . import ui_panel
         from . import update
+        from . import extras_cartoony_max
 
 
 class TORigUIPreferences(AddonPreferences):
@@ -61,10 +90,10 @@ class_list = {
     ui_panel.POSE_OT_rig_change_resolution,
     ui_panel.POSE_OT_rig_set_mask,
     update.RigUIAddonUpdate,
-    TORigUIPreferences
+    TORigUIPreferences,
+    extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax,
+    extras_cartoony_max.POSE_OT_MaxCartoonyToggleVisibility
 }
-
-from bpy.utils import register_class, unregister_class
 
 def register():
     for cls in class_list:
