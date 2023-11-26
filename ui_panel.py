@@ -1631,7 +1631,14 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                 row.scale_y = 1.5
                 row.operator('pose.rig_change_resolution', text="Toggle Subdivision", icon="MOD_SUBSURF").resolution = "subdiv"
 
-                # lay out standard body layers
+                has_masks = False
+                for prop in bone.keys():
+                    if "HIDE" in prop:
+                        has_masks = True
+                        break
+
+                if not has_masks:
+                    return
                 box = layout.box()
                 col = box.column()
                 col.label(text="Toggle Mesh Pieces (Viewport)")

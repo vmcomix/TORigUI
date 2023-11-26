@@ -91,7 +91,6 @@ class_list = {
     ui_panel.POSE_OT_rig_set_mask,
     update.RigUIAddonUpdate,
     TORigUIPreferences,
-    extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax,
     extras_cartoony_max.POSE_OT_MaxCartoonyToggleVisibility
 }
 
@@ -99,6 +98,10 @@ def register():
     for cls in class_list:
         register_class(cls)
 
+    register_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
+
 def unregister():
     for cls in class_list:
         unregister_class(cls)
+
+    unregister_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
