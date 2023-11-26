@@ -1653,7 +1653,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                         op.mask = prop
                         op.objects = json.dumps(bone[prop])
 
-            elif bone.name == "head" or bone.name == "Head": # add parent space switch for head
+            elif bone.name == "head" and bone.get("parent_names"): # add parent space switch for head
                 box = layout.box()
                 col = box.column()
                 col.label(text="Head Parent Space (Rotational)")

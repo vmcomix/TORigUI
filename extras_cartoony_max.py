@@ -397,7 +397,7 @@ class VIEW3D_PT_TORigUI_CartoonyMax(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         bone = context.active_pose_bone
-        if context.active_pose_bone:
+        if context.active_pose_bone and context.object.name == "RIG-Max_Cartoony":
             if "settings" in bone.name and \
                 bone.get("fk_bones") and \
                 bone.get("ik_bones"):
