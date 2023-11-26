@@ -1679,7 +1679,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                 ignore_props = []
                 for prop in bone.keys():
                     try:
-                        if bone.id_properties_ui(prop).as_dict()['description'] == "ignore":
+                        if bone.id_properties_ui(prop).as_dict().get('description') == "ignore":
                             ignore_props.append(prop)
                     except TypeError:
                         continue
