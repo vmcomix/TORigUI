@@ -10,7 +10,7 @@ from bpy.utils import register_class, unregister_class
 bl_info = {
 	'name' : "TOAnimate Rig UI"
 	,'author' : "Vlad Mokhov"
-	,'version' : (1, 1, 0)
+	,'version' : (1, 2, 0)
 	,'blender' : (4, 0, 0)
 	,'description' : "Add on for displaying the UI panel on TOAnimate rigs."
 	,'location': "View 3D > Sidebar(N) > TORigUI"
