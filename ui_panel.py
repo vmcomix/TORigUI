@@ -1149,6 +1149,8 @@ class POSE_OT_rigify_limb_ik2fk_bake(RigifyLimbIk2FkBase, RigifyBakeKeyframesMix
 
     def execute_scan_curves(self, context, obj):
         self.bake_add_bone_frames(self.fk_bone_list, TRANSFORM_PROPS_ALL)
+        if self.extra_ctrl_list == "":
+            self.extra_ctrl_list = []
         return self.bake_get_all_bone_curves(self.ctrl_bone_list + self.extra_ctrl_list, TRANSFORM_PROPS_ALL)
 
 #######################
@@ -1416,16 +1418,22 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
-        version = context.active_object.data["rig_version"]
         box = layout.box()
-        box.label(text=f"Rig Version: {version}", icon="ARMATURE_DATA")
+        row = box.row()
+        # row.alignment = "LEFT"
+
+        # box.alignment = "CENTER"
+        row.label(text=f"{context.object.name.replace('RIG-', '')}", icon="ARMATURE_DATA")
+
+        # row = layout.row()
+        # row.alignment = "CENTER"
+        version = context.active_object.data["rig_version"]
+        row.label(text=f"Rig Version: {version}", icon="FILE_BLEND")
 
         # row = box.row()
         # row.operator('wm.url_open', text="TOAnimate Website", icon="URL").url = "toanimate.ca"
         # row.operator('wm.url_open', text="Teachable", icon="EVENT_T").url = "toanimate.teachable.com"
 
-        layout.separator()
         layout.label(text="Bone Layers", icon="ALIGN_JUSTIFY")
         row_table = collections.defaultdict(list)
         for coll in context.active_object.data.collections:
