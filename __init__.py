@@ -17,7 +17,7 @@ bl_info = {
 	,'category': 'Rigging'
 }
 
-extra_modules = ['extras_cartoony_max.py']
+extra_modules = ['extras_cartoony_max.py', 'vehicle_utils.py']
 
 missing_modules = []
 for module in extra_modules:
@@ -44,7 +44,8 @@ else:
 reload_list = [
                 'ui_panel',
                 'update',
-                'extras_cartoony_max'
+                'extras_cartoony_max',
+                'vehicle_utils'
               ]
 
 # This makes sure to reload the modules when running "Reload Scripts"
@@ -55,6 +56,7 @@ for module in reload_list:
         from . import ui_panel
         from . import update
         from . import extras_cartoony_max
+        from . import vehicle_utils
 
 
 class TORigUIPreferences(AddonPreferences):
@@ -91,7 +93,10 @@ class_list = {
     ui_panel.POSE_OT_rig_set_mask,
     update.RigUIAddonUpdate,
     TORigUIPreferences,
-    extras_cartoony_max.POSE_OT_MaxCartoonyToggleVisibility
+    extras_cartoony_max.POSE_OT_MaxCartoonyToggleVisibility,
+    vehicle_utils.POSE_OT_VehicleTogglePath,
+    vehicle_utils.POSE_OT_VehicleSetFloor,
+    vehicle_utils.POSE_OT_VehicleClearFloor,
 }
 
 def register():
@@ -99,9 +104,11 @@ def register():
         register_class(cls)
 
     register_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
+    register_class(vehicle_utils.VIEW3D_PT_TORigUI_VehicleUI)
 
 def unregister():
     for cls in class_list:
         unregister_class(cls)
 
     unregister_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
+    unregister_class(vehicle_utils.VIEW3D_PT_TORigUI_VehicleUI)

@@ -1683,6 +1683,26 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                 props.parent_names = json.dumps(bone["parent_names"])
                 props.locks = (False, True, True)
 
+            elif bone.get("parent_names") or bone.get("parent_names") == 0 and bone.get("parent_space"): # generic bone with arbitrary parent spaces
+                box = layout.box()
+                col = box.column()
+                col.label(text="Parent Space")
+                group1 = col.row(align=True)
+                group2 = group1.split(factor=0.75, align=True)
+                props = group2.operator('pose.rigify_switch_parent', text='Parent', icon='DOWNARROW_HLT')
+                props.bone = bone.name
+                props.prop_bone = bone.name
+                props.prop_id = 'parent_space'
+                props.parent_names = json.dumps(bone["parent_names"])
+
+                group2.prop(bone, '["parent_space"]', text='')
+
+                props = group1.operator('pose.rigify_switch_parent_bake', text='', icon='ACTION_TWEAK')
+                props.bone = bone.name
+                props.prop_bone = bone.name
+                props.prop_id = 'parent_space'
+                props.parent_names = json.dumps(bone["parent_names"])
+
             elif not list(bone.keys()) == []: # for all other bones, simply display the custom property if there is one
                 ignore_props = []
                 for prop in bone.keys():
@@ -1706,6 +1726,10 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                             if "Fk" in name:
                                 name = name.replace("Fk", "FK")
 
-                            if not bone.id_properties_ui(prop).as_dict()['description'] == "ignore":
-                                row = col.row()
-                                row.prop(bone, f'["{prop}"]', slider=True, text=name)
+                            try:
+                                if not bone.id_properties_ui(prop).as_dict()['description'] == "ignore":
+                                    row = col.row()
+                                    row.prop(bone, f'["{prop}"]', slider=True, text=name)
+                            except KeyError:
+                                    row = col.row()
+                                    row.prop(bone, f'["{prop}"]', slider=True, text=name)
