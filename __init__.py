@@ -10,14 +10,14 @@ from bpy.utils import register_class, unregister_class
 bl_info = {
 	'name' : "TOAnimate Rig UI"
 	,'author' : "Vlad Mokhov"
-	,'version' : (1, 2, 0)
+	,'version' : (1, 3, 0)
 	,'blender' : (4, 0, 0)
 	,'description' : "Add on for displaying the UI panel on TOAnimate rigs."
 	,'location': "View 3D > Sidebar(N) > TORigUI"
 	,'category': 'Rigging'
 }
 
-extra_modules = ['extras_cartoony_max.py', 'vehicle_utils.py']
+extra_modules = ['extras_cartoony_max.py', 'vehicle_utils.py', 'extras_space_rover.py']
 
 missing_modules = []
 for module in extra_modules:
@@ -45,7 +45,8 @@ reload_list = [
                 'ui_panel',
                 'update',
                 'extras_cartoony_max',
-                'vehicle_utils'
+                'vehicle_utils',
+                'extras_space_rover'
               ]
 
 # This makes sure to reload the modules when running "Reload Scripts"
@@ -57,6 +58,7 @@ for module in reload_list:
         from . import update
         from . import extras_cartoony_max
         from . import vehicle_utils
+        from . import extras_space_rover
 
 
 class TORigUIPreferences(AddonPreferences):
@@ -104,11 +106,11 @@ def register():
         register_class(cls)
 
     register_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
-    register_class(vehicle_utils.VIEW3D_PT_TORigUI_VehicleUI)
+    register_class(extras_space_rover.VIEW3D_PT_TORigUI_VehicleUI)
 
 def unregister():
     for cls in class_list:
         unregister_class(cls)
 
     unregister_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
-    unregister_class(vehicle_utils.VIEW3D_PT_TORigUI_VehicleUI)
+    unregister_class(extras_space_rover.VIEW3D_PT_TORigUI_VehicleUI)
