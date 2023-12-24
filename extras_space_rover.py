@@ -68,3 +68,5 @@ class VIEW3D_PT_TORigUI_VehicleUI(bpy.types.Panel):
 
             row = layout.row(align=True)
             row.prop(context.active_pose_bone, '["glass_visibility"]', text="Glass Visibility")
+            row = layout.row(align=True)
+            row.prop(context.active_pose_bone, '["walls_visibility"]', text="Walls Visibility")
