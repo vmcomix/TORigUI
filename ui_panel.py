@@ -1418,6 +1418,17 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        self.update = bpy.context.preferences.addons["TORigUI"].preferences.update
+        row = layout.row()
+        if self.update == "Update available":
+            row.operator("pose.rigui_update_addon", text="Update", icon="IMPORT").update = True
+        else:
+            row.operator("pose.rigui_update_addon", text="Check for Add-on Update", icon="QUESTION").check_update = True
+
+        row = layout.row()
+        if not self.update == "":
+            row.label(text=self.update)
+
         box = layout.box()
         row = box.row()
         # row.alignment = "LEFT"
