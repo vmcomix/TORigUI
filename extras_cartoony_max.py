@@ -1,9 +1,9 @@
 import bpy
 
 class POSE_OT_MaxCartoonyToggleVisibility(bpy.types.Operator):
-    """Cartoony Max Toggle Visibility"""
+    """Lil MaxToggle Visibility"""
     bl_idname = "pose.max_cartoony_toggle_vis"
-    bl_label = "Toggle Visibility for Cartoony Max"
+    bl_label = "Toggle Visibility for Lil Max"
     
     hide_bones : bpy.props.StringProperty(default="")
     hide_geo : bpy.props.StringProperty(default="")
@@ -390,13 +390,13 @@ class VIEW3D_PT_TORigUI_CartoonyMax(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'TO Rig UI'
-    bl_label = "Cartoony Max - Special Settings"
+    bl_label = "Lil Max - Special Settings"
     bl_parent_id = "VIEW3D_PT_TORigUI"
 
     @classmethod
     def poll(cls, context):
         bone = context.active_pose_bone
-        if context.active_pose_bone and context.object.name == "RIG-Max_Cartoony":
+        if context.active_pose_bone and context.object.name == "RIG-Max_Cartoony" or "RIG-Lil_Max":
             if "settings" in bone.name and \
                 bone.get("fk_bones") and \
                 bone.get("ik_bones"):
