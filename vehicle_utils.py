@@ -1,13 +1,9 @@
 import bpy
-import json
 
 class POSE_OT_VehicleTogglePath(bpy.types.Operator):
     """Toggles path for vehicle"""
     bl_idname = "pose.toggle_vehicle_path"
     bl_label = "Toggle Vehicle Path"
-
-    # path_tangents : bpy.props.StringProperty(name="Path Tangents")
-    # spline_object : bpy.props.StringProperty(name="Spline Object")
     
     def execute(self,context):
         ob = context.active_object

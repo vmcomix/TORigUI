@@ -1,17 +1,17 @@
 import bpy
 
-class VIEW3D_PT_TORigUI_VehicleUI(bpy.types.Panel):
+class VIEW3D_PT_TORigUI_SpaceRoverUI(bpy.types.Panel):
     
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'TO Rig UI'
-    bl_label = "Vehicle Rig - Special Settings"
+    bl_label = "Space Rover - Special Settings"
     bl_parent_id = "VIEW3D_PT_TORigUI"
 
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob.data.get("is_toanimate_vehicle") and "settings" in context.active_bone.name
+        return ob.data.get("is_toanimate_vehicle") and "settings" in context.active_bone.name and "Space_Rover" in ob.name
 
     def draw(self, context):
         if "settings" in context.active_pose_bone.name:

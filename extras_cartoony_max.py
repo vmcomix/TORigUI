@@ -1,5 +1,4 @@
 import bpy
-from .ui_panel import VIEW3D_PT_TORigUI
 
 class POSE_OT_MaxCartoonyToggleVisibility(bpy.types.Operator):
     """Cartoony Max Toggle Visibility"""

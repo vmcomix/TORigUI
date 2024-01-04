@@ -17,7 +17,7 @@ bl_info = {
 	,'category': 'Rigging'
 }
 
-extra_modules = ['extras_cartoony_max.py', 'vehicle_utils.py', 'extras_space_rover.py']
+extra_modules = ['extras_cartoony_max.py', 'vehicle_utils.py', 'extras_space_rover.py', 'extras_cyberbike.py']
 
 missing_modules = []
 for module in extra_modules:
@@ -46,7 +46,8 @@ reload_list = [
                 'update',
                 'extras_cartoony_max',
                 'vehicle_utils',
-                'extras_space_rover'
+                'extras_space_rover',
+                'extras_cyberbike'
               ]
 
 # This makes sure to reload the modules when running "Reload Scripts"
@@ -59,6 +60,7 @@ for module in reload_list:
         from . import extras_cartoony_max
         from . import vehicle_utils
         from . import extras_space_rover
+        from . import extras_cyberbike
 
 
 class TORigUIPreferences(AddonPreferences):
@@ -106,11 +108,13 @@ def register():
         register_class(cls)
 
     register_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
-    register_class(extras_space_rover.VIEW3D_PT_TORigUI_VehicleUI)
+    register_class(extras_space_rover.VIEW3D_PT_TORigUI_SpaceRoverUI)
+    register_class(extras_cyberbike.VIEW3D_PT_TORigUI_CyberbikeUI)
 
 def unregister():
     for cls in class_list:
         unregister_class(cls)
 
     unregister_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
-    unregister_class(extras_space_rover.VIEW3D_PT_TORigUI_VehicleUI)
+    unregister_class(extras_space_rover.VIEW3D_PT_TORigUI_SpaceRoverUI)
+    unregister_class(extras_cyberbike.VIEW3D_PT_TORigUI_CyberbikeUI)
