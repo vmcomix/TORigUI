@@ -1597,7 +1597,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                     col = box.column(align=True)
                     col.label(text="Properties")
 
-                    for prop in bone.keys():
+                    for prop in sorted(bone.keys()):
                         if isinstance(bone.get(prop), float) or \
                         isinstance(bone.get(prop), int):
                             name = prop.replace("_", " ").title()
@@ -1726,7 +1726,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                 if not len(ignore_props) == len(bone.keys()):
                     layout.label(text="Bone Properties", icon="PROPERTIES")
 
-                    for prop in bone.keys():
+                    for prop in sorted(bone.keys()):
                         if isinstance(bone.get(prop), float) or \
                         isinstance(bone.get(prop), int):
                             col = layout.column(align=True)
@@ -1737,10 +1737,10 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                             if "Fk" in name:
                                 name = name.replace("Fk", "FK")
 
-                            try:
-                                if not bone.id_properties_ui(prop).as_dict()['description'] == "ignore":
-                                    row = col.row()
-                                    row.prop(bone, f'["{prop}"]', slider=True, text=name)
-                            except KeyError:
-                                    row = col.row()
-                                    row.prop(bone, f'["{prop}"]', slider=True, text=name)
+                            # try:
+                            if not bone.id_properties_ui(prop).as_dict().get("description") == "ignore":
+                                row = col.row()
+                                row.prop(bone, f'["{prop}"]', slider=True, text=name)
+                            # except KeyError:
+                            #         row = col.row()
+                            #         row.prop(bone, f'["{prop}"]', slider=True, text=name)
