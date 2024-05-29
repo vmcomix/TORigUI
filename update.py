@@ -33,8 +33,8 @@ def latest_commit_sha():
             print(f'Error getting latest commit. Status code: {response.status_code}')
             return None
 
-class RigUIAddonUpdate(bpy.types.Operator):
-    bl_idname = "pose.rigui_update_addon"
+class TORigUIAddonUpdate(bpy.types.Operator):
+    bl_idname = "pose.to_rigui_update_addon"
     bl_label = "Update add-on"
     bl_description = "Download and install new version."
     bl_options = {"REGISTER"}

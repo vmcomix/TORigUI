@@ -73,9 +73,9 @@ class TORigUIPreferences(AddonPreferences):
         layout = self.layout
         row = layout.row()
         if self.update == "Update available":
-            row.operator("pose.rigui_update_addon", text="Update", icon="IMPORT").update = True
+            row.operator("pose.to_rigui_update_addon", text="Update", icon="IMPORT").update = True
         else:
-            row.operator("pose.rigui_update_addon", text="Check for Update", icon="QUESTION").check_update = True
+            row.operator("pose.to_rigui_update_addon", text="Check for Update", icon="QUESTION").check_update = True
 
         row = layout.row()
         if not self.update == "":
@@ -93,9 +93,11 @@ class_list = {
     ui_panel.POSE_OT_rigify_leg_roll_ik2fk_bake,
     ui_panel.POSE_OT_rigify_switch_parent,
     ui_panel.POSE_OT_rigify_switch_parent_bake,
+    ui_panel.POSE_OT_rigify_finger_fk2ik,
+    ui_panel.POSE_OT_rigify_finger_fk2ik_bake,
     ui_panel.POSE_OT_rig_change_resolution,
     ui_panel.POSE_OT_rig_set_mask,
-    update.RigUIAddonUpdate,
+    update.TORigUIAddonUpdate,
     TORigUIPreferences,
     extras_cartoony_max.POSE_OT_MaxCartoonyToggleVisibility,
     vehicle_utils.POSE_OT_VehicleTogglePath,

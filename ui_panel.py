@@ -1153,6 +1153,158 @@ class POSE_OT_rigify_limb_ik2fk_bake(RigifyLimbIk2FkBase, RigifyBakeKeyframesMix
             self.extra_ctrl_list = []
         return self.bake_get_all_bone_curves(self.ctrl_bone_list + self.extra_ctrl_list, TRANSFORM_PROPS_ALL)
 
+########################
+## Finger Snap IK to FK ##
+########################
+
+class RigifyFingerFk2IkBase:
+    ik_control:      StringProperty(name="IK Control")
+    ik_chain:        StringProperty(name="IK output chain")
+    constraint_bone: StringProperty(name="Bone With the IK Constraint")
+    fk_master:       StringProperty(name="FK Master Control")
+    fk_chain:        StringProperty(name="FK Bone Chain")
+    axis:            StringProperty(name="Main Rotation Axis", default="+X")
+
+    def init_execute(self, context):
+        self.ik_chain_list = json.loads(self.ik_chain)
+        self.fk_chain_list = json.loads(self.fk_chain)
+
+    # Extracting the IK state - requires forcing IK on temporarily
+    def find_constraint_drivers(self, obj):
+        self.driver_fcurves = {}
+        self.ik_constraint = None
+
+        if self.constraint_bone:
+            bone = obj.pose.bones[self.constraint_bone]
+            self.ik_constraint = con = bone.constraints['FingerIK']
+            self.driver_fcurves = DriverCurveTable(obj).get_prop_curves(con, 'influence')
+
+    def before_save_state(self, context, obj):
+        self.find_constraint_drivers(obj)
+
+        if self.ik_constraint:
+            for fcu in self.driver_fcurves.values():
+                fcu.mute = True
+
+            self.ik_constraint.influence = 1
+
+            context.view_layer.update()
+
+    def get_fk_axis_angles(self, obj):
+        options = self.axis_options[self.axis]
+        angles = []
+
+        for bone in self.fk_chain_list[1:-1]:
+            matrix = obj.pose.bones[bone].matrix_basis
+            eulers = matrix.to_euler(options['order'])
+            angles.append(eulers[options['axis']])
+
+        return angles
+
+    def get_ik_original_matrix(self, obj):
+        bone = obj.pose.bones[self.ik_chain_list[0]]
+
+        if len(bone.constraints) == 1 and bone.constraints[0].type == 'COPY_TRANSFORMS':
+            target = bone.constraints[0].subtarget
+            return obj.pose.bones[target].matrix
+
+    def save_frame_state(self, context, obj):
+        matrices = get_chain_transform_matrices(obj, self.ik_chain_list)
+        fk_matrices = get_chain_transform_matrices(obj, self.fk_chain_list)
+        angles = self.get_fk_axis_angles(obj)
+        ik_original = self.get_ik_original_matrix(obj)
+        return (matrices, fk_matrices, angles, ik_original)
+
+    def after_save_state(self, context, obj):
+        if self.ik_constraint:
+            for fcu in self.driver_fcurves.values():
+                fcu.mute = False
+
+            context.view_layer.update()
+
+    # Applying the state
+    axis_options = {
+        "+X": {"axis": 0, "sign": 1, "order": 'ZYX'},
+        "-X": {"axis": 0, "sign": -1, "order": 'ZYX'},
+        "+Y": {"axis": 1, "sign": 1, "order": 'ZXY'},
+        "-Y": {"axis": 1, "sign": -1, "order": 'ZXY'},
+        "+Z": {"axis": 2, "sign": 1, "order": 'XYZ'},
+        "-Z": {"axis": 2, "sign": -1, "order": 'XYZ'},
+    }
+
+    def apply_frame_state(self, context, obj, state):
+        matrices, fk_matrices, old_angles, ik_original = state
+
+        fk_master = obj.pose.bones[self.fk_master]
+        fk_chain = [ obj.pose.bones[k] for k in self.fk_chain_list ]
+
+        # Set the master control position and rotation.
+        master_mat = matrices[0]
+
+        if ik_original:
+            master_mat = master_mat @ ik_original.inverted() @ fk_matrices[0]
+
+        master_mat = obj.convert_space(
+            pose_bone=fk_chain[0].parent, matrix=master_mat,
+            from_space='POSE', to_space='LOCAL'
+        )
+        master_mat = obj.convert_space(
+            pose_bone=fk_master, matrix=master_mat,
+            from_space='LOCAL', to_space='POSE'
+        )
+        master_mat.translation = matrices[0].translation
+
+        set_transform_from_matrix(obj, self.fk_master, master_mat)
+
+        fk_master.scale = (1, 1, 1)
+
+        if self.keyflags is not None:
+            keyframe_transform_properties(obj, self.fk_master, self.keyflags)
+
+        context.view_layer.update()
+
+        # Apply the detail controls
+        set_chain_transforms_from_matrices(
+            context, obj, self.fk_chain_list[:-1], matrices, keyflags=self.keyflags,
+        )
+
+        set_transform_from_matrix(
+            obj, self.fk_chain_list[-1], Matrix.Identity(4), space='LOCAL', keyflags=self.keyflags
+        )
+
+        # Compute the master scale from average control angle, biased by original
+        options = self.axis_options[self.axis]
+
+        angles = self.get_fk_axis_angles(obj)
+        avg_angle = sum(a - b for a, b in zip(angles, old_angles)) / len(angles)
+
+        fk_master.scale[1] = 1 - avg_angle * options['sign'] / pi
+
+        if self.keyflags is not None:
+            keyframe_transform_properties(obj, self.fk_master, self.keyflags)
+
+        context.view_layer.update()
+
+        # Re-apply the rest of the detail controls
+        set_chain_transforms_from_matrices(
+            context, obj, self.fk_chain_list[1:-1], matrices[1:], keyflags=self.keyflags,
+        )
+
+class POSE_OT_rigify_finger_fk2ik(RigifyFingerFk2IkBase, RigifySingleUpdateMixin, bpy.types.Operator):
+    bl_idname = "pose.rigify_finger_fk2ik"
+    bl_label = "Snap FK->IK"
+    bl_description = "Snap the FK chain to IK result"
+
+class POSE_OT_rigify_finger_fk2ik_bake(RigifyFingerFk2IkBase, RigifyBakeKeyframesMixin, bpy.types.Operator):
+    bl_idname = "pose.rigify_finger_fk2ik_bake"
+    bl_label = "Apply Snap FK->IK To Keyframes"
+    bl_description = "Snap the FK chain keyframes to IK result"
+
+    def execute_scan_curves(self, context, obj):
+        fk_bones = [self.fk_master, *self.fk_chain_list]
+        self.bake_add_bone_frames(fk_bones + [self.ik_control], TRANSFORM_PROPS_ALL)
+        return self.bake_get_all_bone_curves(fk_bones, TRANSFORM_PROPS_ALL)
+
 #######################
 ## Leg Snap IK to FK ##
 #######################
@@ -1421,9 +1573,9 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
         self.update = bpy.context.preferences.addons["TORigUI"].preferences.update
         row = layout.row()
         if self.update == "Update available":
-            row.operator("pose.rigui_update_addon", text="Update", icon="IMPORT").update = True
+            row.operator("pose.to_rigui_update_addon", text="Update", icon="IMPORT").update = True
         else:
-            row.operator("pose.rigui_update_addon", text="Check for Add-on Update", icon="QUESTION").check_update = True
+            row.operator("pose.to_rigui_update_addon", text="Check for Add-on Update", icon="QUESTION").check_update = True
 
         row = layout.row()
         if not self.update == "":
@@ -1497,8 +1649,6 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                     row = col.row(align=True)
                     row.scale_y = 1.5
 
-                    # row.use_property_split = True
-                    # row.use_property_decorate = False
                     row.prop(bone, '["IK_FK"]', slider=True, text="IK -> FK")
 
                     col = box.column(align=True)
@@ -1633,7 +1783,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                             row = col.row()
                             row.prop(bone, f'["{prop}"]', slider=True, text=name)
 
-            elif "God" in bone.name or "Root" in bone.name: # display specific buttons for god/root control
+            elif "God" in bone.name or "root" in bone.name: # display specific buttons for god/root control
                 layout.label(text="General Rig Settings", icon="SETTINGS")
 
                 box = layout.box()
@@ -1713,6 +1863,129 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                 props.prop_bone = bone.name
                 props.prop_id = 'parent_space'
                 props.parent_names = json.dumps(bone["parent_names"])
+
+            elif "master" in bone.name and \
+                bone.get("fk_chain") and \
+                bone.get("ik_control"): # display specific layout and buttons for finger settings controls
+
+                layout.label(text='Finger Settings', icon="SETTINGS")
+
+                box = layout.box()
+                col = box.column(align=True)
+
+                col.label(text="IK/FK Switch")
+                row = col.row(align=True)
+                row.scale_y = 1.5
+
+                row.prop(bone, '["IK_FK"]', slider=True, text="IK -> FK")
+
+                col = box.column(align=True)
+                col.label(text="IK/FK Snapping")
+                row = col.row(align=True)
+                row.scale_y = 1.5
+
+                # FK to IK snap
+                props = row.operator('pose.rigify_finger_fk2ik', text=f'FK->IK ({bone.name.title().replace(".01", "")})', icon='SNAP_ON')
+                props.fk_master = bone["fk_master"]
+                props.fk_chain = json.dumps(bone["fk_chain"])
+                props.ik_chain = json.dumps(bone["ik_chain"])
+                props.ik_control = bone["ik_control"]
+                props.constraint_bone = bone["constraint_bone"]
+                props.axis = bone["axis"]
+
+                row = col.row(align=True)
+
+                props = row.operator('pose.rigify_finger_fk2ik_bake', text='Action', icon='ACTION_TWEAK')
+                props.fk_master = bone["fk_master"]
+                props.fk_chain = json.dumps(bone["fk_chain"])
+                props.ik_chain = json.dumps(bone["ik_chain"])
+                props.ik_control = bone["ik_control"]
+                props.constraint_bone = bone["constraint_bone"]
+                props.axis = bone["axis"]
+
+                props = row.operator('pose.rigify_clear_keyframes', text='Clear', icon='CANCEL')
+                props.bones = json.dumps([bone["fk_master"]] + bone["fk_chain"])
+
+
+                col.separator()
+                row = col.row(align=True)
+                row.scale_y = 1.5
+
+                # IK to FK snap
+                props = row.operator('pose.rigify_generic_snap', text=f'IK->FK ({bone.name.title().replace(".01", "")})', icon='SNAP_ON')
+                props.output_bones = json.dumps([bone['ik_control']])
+                props.input_bones = json.dumps([bone['fk_chain'][-1]])
+                props.ctrl_bones = json.dumps([bone["fk_master"]] + bone["fk_chain"])
+                props.locks = (False, True, True)
+                props.tooltip = 'IK to FK'
+
+                row = col.row(align=True)
+
+                props = row.operator('pose.rigify_generic_snap_bake', text='Action', icon='ACTION_TWEAK')
+                props.output_bones = json.dumps([bone['ik_control']])
+                props.input_bones = json.dumps([bone['fk_chain']])
+                props.ctrl_bones = json.dumps([bone["fk_master"]] + bone["fk_chain"])
+                props.locks = (False, True, True)
+                props.tooltip = 'IK to FK'
+
+
+                props = row.operator('pose.rigify_clear_keyframes', text='Clear', icon='CANCEL')
+                props.bones = json.dumps([bone['ik_control']])
+
+                # Parent Spaces
+                box = layout.box()
+                col = box.column(align=True)
+                col.label(text="Parent Spaces")
+                group1 = col.row(align=True)
+                group2 = group1.split(factor=0.75, align=True)
+
+                props = group2.operator('pose.rigify_switch_parent', text='IK Parent', icon='DOWNARROW_HLT')
+                props.bone = bone["ik_control"]
+                props.prop_bone = bone.name
+                props.prop_id = 'IK_parent'
+                props.parent_names = json.dumps(bone["ik_parentswitch_parentnames"])
+                props.locks = (False, False, False)
+
+                group2.prop(bone, '["IK_parent"]', text='')
+
+                box = layout.box()
+                col = box.column(align=True)
+                col.label(text="Properties")
+                row = col.row()
+                row.prop(bone, '["finger_curve"]', slider=True, text="Finger Curve")
+
+            elif "eye_common" in bone.name and bone.get("parent_switch"): # eye settings
+                bones = context.active_object.pose.bones
+                col = layout.column(align=True)
+                row = col.split(factor=0.66, align=True)
+                row.scale_y = 1.3
+                row.prop(bones['eye.L'], '["lid_follow"]', index=0, text='Eyelids Follow (eye.L)', slider=True)
+                row.prop(bones['eye.L'], '["lid_follow"]', index=1, text='', slider=True)
+                row = col.row(align=True)
+                row.prop(bones['eye.L'], '["lid_attach"]', text='Eyelids Attached (eye.L)', slider=True)
+                col = layout.column(align=True)
+                row = col.split(factor=0.66, align=True)
+                row.scale_y = 1.3
+                row.prop(bones['eye.R'], '["lid_follow"]', index=0, text='Eyelids Follow (eye.R)', slider=True)
+                row.prop(bones['eye.R'], '["lid_follow"]', index=1, text='', slider=True)
+                row = col.row(align=True)
+                row.prop(bones['eye.R'], '["lid_attach"]', text='Eyelids Attached (eye.R)', slider=True)
+
+                group1 = layout.row(align=True)
+                group2 = group1.split(factor=0.75, align=True)
+                props = group2.operator('pose.rigify_switch_parent', text='Parent (eye_common)', icon='DOWNARROW_HLT')
+                props.bone = 'eye_common'
+                props.prop_bone = 'eye_common'
+                props.prop_id = 'parent_switch'
+                props.parent_names = '["None", "God", "COG", "Hips", "Chest", "Head", "head_bend_upper"]'
+                props.locks = (False, False, False)
+                group2.prop(bones['eye_common'], '["parent_switch"]', text='')
+                props = group1.operator('pose.rigify_switch_parent_bake', text='', icon='ACTION_TWEAK')
+                props.bone = 'eye_common'
+                props.prop_bone = 'eye_common'
+                props.prop_id = 'parent_switch'
+                props.parent_names = '["None", "God", "COG", "Hips", "Chest", "Head", "head_bend_upper"]'
+                props.locks = (False, False, False)
 
             elif not list(bone.keys()) == []: # for all other bones, simply display the custom property if there is one
                 ignore_props = []

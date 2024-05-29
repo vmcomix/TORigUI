@@ -396,11 +396,13 @@ class VIEW3D_PT_TORigUI_CartoonyMax(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         bone = context.active_pose_bone
-        if context.active_pose_bone and context.object.name == "RIG-Max_Cartoony" or "RIG-Lil_Max":
-            if "settings" in bone.name and \
-                bone.get("fk_bones") and \
-                bone.get("ik_bones"):
-                    return True
+        if context.active_pose_bone:
+            if context.object.name == "RIG-Max_Cartoony" or context.object.name == "RIG-Lil_Max":
+                if "settings" in bone.name and \
+                    bone.get("fk_bones") and \
+                    bone.get("ik_bones"):
+                        return True
+        return False
             
 
     def draw(self, context):
