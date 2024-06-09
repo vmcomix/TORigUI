@@ -1789,12 +1789,13 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                 box = layout.box()
                 col = box.column(align=True)
                 col.label(text="Set Rig Resolution (Viewport)")
-                row = col.row(align=True)
-                row.scale_y = 2
-                row.enabled = not bone.get("no_res_switching")
-                row.operator('pose.rig_change_resolution', text="Low Res", icon="MESH_PLANE").resolution = "low"
-                row.operator('pose.rig_change_resolution', text="Medium Res", icon="MOD_REMESH").resolution = "medium"
-                row.operator('pose.rig_change_resolution', text="High Res", icon="MESH_UVSPHERE").resolution = "high"
+                if not bone.get("no_res_switching"):
+                    row = col.row(align=True)
+                    row.scale_y = 2
+                    # row.enabled = not bone.get("no_res_switching")
+                    row.operator('pose.rig_change_resolution', text="Low Res", icon="MESH_PLANE").resolution = "low"
+                    row.operator('pose.rig_change_resolution', text="Medium Res", icon="MOD_REMESH").resolution = "medium"
+                    row.operator('pose.rig_change_resolution', text="High Res", icon="MESH_UVSPHERE").resolution = "high"
                 col.separator()
                 row = col.row(align=True)
                 row.scale_y = 1.5
