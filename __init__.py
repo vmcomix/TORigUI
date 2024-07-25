@@ -47,7 +47,8 @@ reload_list = [
                 'extras_cartoony_max',
                 'vehicle_utils',
                 'extras_space_rover',
-                'extras_cyberbike'
+                'extras_cyberbike',
+                'extras_setpiece'
               ]
 
 # This makes sure to reload the modules when running "Reload Scripts"
@@ -61,6 +62,7 @@ for module in reload_list:
         from . import vehicle_utils
         from . import extras_space_rover
         from . import extras_cyberbike
+        from . import extras_setpiece
 
 
 class TORigUIPreferences(AddonPreferences):
@@ -103,6 +105,7 @@ class_list = {
     vehicle_utils.POSE_OT_VehicleTogglePath,
     vehicle_utils.POSE_OT_VehicleSetFloor,
     vehicle_utils.POSE_OT_VehicleClearFloor,
+    extras_setpiece.POSE_OT_SetToggleVisibility,
 }
 
 def register():
@@ -112,6 +115,7 @@ def register():
     register_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
     register_class(extras_space_rover.VIEW3D_PT_TORigUI_SpaceRoverUI)
     register_class(extras_cyberbike.VIEW3D_PT_TORigUI_CyberbikeUI)
+    register_class(extras_setpiece.VIEW3D_PT_TORigUI_SetUI)
 
 def unregister():
     for cls in class_list:
@@ -120,3 +124,4 @@ def unregister():
     unregister_class(extras_cartoony_max.VIEW3D_PT_TORigUI_CartoonyMax)
     unregister_class(extras_space_rover.VIEW3D_PT_TORigUI_SpaceRoverUI)
     unregister_class(extras_cyberbike.VIEW3D_PT_TORigUI_CyberbikeUI)
+    unregister_class(extras_setpiece.VIEW3D_PT_TORigUI_SetUI)
