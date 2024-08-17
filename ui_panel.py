@@ -1507,21 +1507,30 @@ class POSE_OT_rig_change_resolution(bpy.types.Operator):
     def execute(self, context):
         if self.resolution == "high":
             coll_name = context.active_object.name.replace("RIG-", "")
-            bpy.data.collections[coll_name+"-GEO-High"].hide_viewport = False
-            bpy.data.collections[coll_name+"-GEO-Medium"].hide_viewport = True
-            bpy.data.collections[coll_name+"-GEO-Low"].hide_viewport = True
+            try:
+                bpy.data.collections[coll_name+"-GEO-High"].hide_viewport = False
+                bpy.data.collections[coll_name+"-GEO-Medium"].hide_viewport = True
+                bpy.data.collections[coll_name+"-GEO-Low"].hide_viewport = True
+            except KeyError:
+                self.report({'ERROR'}, "Resolutions not available")
 
         elif self.resolution == "medium":
             coll_name = context.active_object.name.replace("RIG-", "")
-            bpy.data.collections[coll_name+"-GEO-High"].hide_viewport = True
-            bpy.data.collections[coll_name+"-GEO-Medium"].hide_viewport = False
-            bpy.data.collections[coll_name+"-GEO-Low"].hide_viewport = True
+            try:
+                bpy.data.collections[coll_name+"-GEO-High"].hide_viewport = True
+                bpy.data.collections[coll_name+"-GEO-Medium"].hide_viewport = False
+                bpy.data.collections[coll_name+"-GEO-Low"].hide_viewport = True
+            except KeyError:
+                self.report({'ERROR'}, "Resolutions not available")
 
         elif self.resolution == "low":
             coll_name = context.active_object.name.replace("RIG-", "")
-            bpy.data.collections[coll_name+"-GEO-High"].hide_viewport = True
-            bpy.data.collections[coll_name+"-GEO-Medium"].hide_viewport = True
-            bpy.data.collections[coll_name+"-GEO-Low"].hide_viewport = False
+            try:
+                bpy.data.collections[coll_name+"-GEO-High"].hide_viewport = True
+                bpy.data.collections[coll_name+"-GEO-Medium"].hide_viewport = True
+                bpy.data.collections[coll_name+"-GEO-Low"].hide_viewport = False
+            except KeyError:
+                self.report({'ERROR'}, "Resolutions not available")
 
         elif self.resolution == "subdiv":
             for ob in bpy.data.collections[context.active_object.name.replace("RIG-", "")+"-GEO"].all_objects:
@@ -1783,12 +1792,23 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                             row = col.row()
                             row.prop(bone, f'["{prop}"]', slider=True, text=name)
 
-            elif "God" in bone.name or "root" in bone.name: # display specific buttons for god/root control
-                layout.label(text="General Rig Settings", icon="SETTINGS")
+            elif "God" in bone.name or "root" in bone.name : # display specific buttons for god/root control
+                if "sub" in bone.name:
+                    return
 
-                box = layout.box()
-                col = box.column(align=True)
-                col.label(text="Set Rig Resolution (Viewport)")
+                has_masks = False
+                for prop in bone.keys():
+                    if "HIDE" in prop:
+                        has_masks = True
+                        break
+
+                if not bone.get("no_res_switching") or not bone.get("no_subdiv") or has_masks:
+                    layout.label(text="General Rig Settings", icon="SETTINGS")
+
+                if not bone.get("no_res_switching") or not bone.get("no_subdiv"):
+                    box = layout.box()
+                    col = box.column(align=True)
+                    col.label(text="Set Rig Resolution (Viewport)")
                 if not bone.get("no_res_switching"):
                     row = col.row(align=True)
                     row.scale_y = 2
@@ -1796,16 +1816,12 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                     row.operator('pose.rig_change_resolution', text="Low Res", icon="MESH_PLANE").resolution = "low"
                     row.operator('pose.rig_change_resolution', text="Medium Res", icon="MOD_REMESH").resolution = "medium"
                     row.operator('pose.rig_change_resolution', text="High Res", icon="MESH_UVSPHERE").resolution = "high"
-                col.separator()
-                row = col.row(align=True)
-                row.scale_y = 1.5
-                row.operator('pose.rig_change_resolution', text="Toggle Subdivision", icon="MOD_SUBSURF").resolution = "subdiv"
+                if not bone.get("no_subdiv"):
+                    col.separator()
+                    row = col.row(align=True)
+                    row.scale_y = 1.5
+                    row.operator('pose.rig_change_resolution', text="Toggle Subdivision", icon="MOD_SUBSURF").resolution = "subdiv"
 
-                has_masks = False
-                for prop in bone.keys():
-                    if "HIDE" in prop:
-                        has_masks = True
-                        break
 
                 if not has_masks:
                     return
@@ -1995,7 +2011,9 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                         if bone.id_properties_ui(prop).as_dict().get('description') == "ignore":
                             ignore_props.append(prop)
                     except TypeError:
-                        continue
+                        pass
+                    if prop == "rigify_parameters":
+                        ignore_props.append(prop)
                     
                 if not len(ignore_props) == len(bone.keys()):
                     layout.label(text="Bone Properties", icon="PROPERTIES")
