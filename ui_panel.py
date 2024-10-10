@@ -1767,7 +1767,7 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
                                 name = name.replace("Fk", "FK")
 
                             row = col.row()
-                            ignore = ['IK_FK', 'IK_parent', 'pole_parent']
+                            ignore = ['IK_FK', 'IK_parent', 'pole_parent', 'pole_vector']
                             if not prop in ignore:
                                 if type(bone[prop]) == bool:
                                     row.separator()
