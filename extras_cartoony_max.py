@@ -398,10 +398,7 @@ class VIEW3D_PT_TORigUI_CartoonyMax(bpy.types.Panel):
         bone = context.active_pose_bone
         if context.active_pose_bone:
             if context.object.name == "RIG-Max_Cartoony" or context.object.name == "RIG-Lil_Max":
-                if "settings" in bone.name and \
-                    bone.get("fk_bones") and \
-                    bone.get("ik_bones"):
-                        return True
+                return True
         return False
             
 
@@ -476,5 +473,14 @@ class VIEW3D_PT_TORigUI_CartoonyMax(bpy.types.Panel):
             op.keyed_only = False
             op = row.operator('pose.max_cartoony_toggle_vis',text = 'Keyed', icon='KEYFRAME')
             op.hide_bones = side+"_pinky_f"
+            op.keyed_only = True
+
+        elif 'head' in bone.name:
+            row = layout.row(align=True)
+            op = row.operator('pose.max_cartoony_toggle_vis',text = 'Toggle Head Sculptors', icon='SCULPTMODE_HLT')
+            op.hide_bones = 'head'
+            op.keyed_only = False
+            op = row.operator('pose.max_cartoony_toggle_vis',text = 'Toggle Keyed', icon='KEYFRAME')
+            op.hide_bones = 'head'
             op.keyed_only = True
 
