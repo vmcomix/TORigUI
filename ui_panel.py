@@ -1594,36 +1594,33 @@ class VIEW3D_PT_TORigUI(bpy.types.Panel):
         row = box.row()
         # row.alignment = "LEFT"
 
-        # box.alignment = "CENTER"
         row.label(text=f"{context.object.name.replace('RIG-', '')}", icon="ARMATURE_DATA")
-
-        # row = layout.row()
-        # row.alignment = "CENTER"
-        version = context.active_object.data["rig_version"]
+        version = context.active_object.data.get("rig_version")
+        version = version if not version == None else "N/A"
         row.label(text=f"Rig Version: {version}", icon="FILE_BLEND")
-
-        # row = box.row()
-        # row.operator('wm.url_open', text="TOAnimate Website", icon="URL").url = "toanimate.ca"
-        # row.operator('wm.url_open', text="Teachable", icon="EVENT_T").url = "toanimate.teachable.com"
 
         layout.label(text="Bone Layers", icon="ALIGN_JUSTIFY")
         row_table = collections.defaultdict(list)
         for coll in context.active_object.data.collections:
-            row_id = coll.get('rigify_ui_row', 0)
+            row_id = coll.rigify_ui_row
             if row_id > 0:
                 row_table[row_id].append(coll)
         box = layout.box()
         col = box.column()
-        for row_id in range(min(row_table.keys()), 1 + max(row_table.keys())):
+        if not len(row_table) == 0:
+            for row_id in range(min(row_table.keys()), 1 + max(row_table.keys())):
+                row = col.row()
+                # row.scale_y = 1.2
+                row_buttons = row_table[row_id]
+                if row_buttons:
+                    for coll in row_buttons:
+                        title = coll.get('rigify_ui_title') or coll.name
+                        row.prop(coll, 'is_visible', toggle=True, text=title)
+                else:
+                    row.separator()
+        else:
             row = col.row()
-            # row.scale_y = 1.2
-            row_buttons = row_table[row_id]
-            if row_buttons:
-                for coll in row_buttons:
-                    title = coll.get('rigify_ui_title') or coll.name
-                    row.prop(coll, 'is_visible', toggle=True, text=title)
-            else:
-                row.separator()
+            row.label(text="Bone collection table not found.")
 
         if context.active_pose_bone:
             bone = context.active_pose_bone
